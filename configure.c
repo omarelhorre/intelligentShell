@@ -75,6 +75,42 @@ int main(int argc, char* argv[])
         "Format:\n"
         "Explanation:\n <text>\n\n"
         "New file content:\n <full file>\n",argv[1],file_content,argv[3],argv[2]);
-        printf("%s",prompt);
+        free(file_content);
+        char* response = chatgpt_query(API_KEY, prompt);
+        free(prompt);
+        if(!response)
+        {
+            fprintf(stderr, "Status -1, could not get answer from OPENAI\n");
+            return -1;
+        }
+
+        //injection gotta fix it later
+        char* new_file_start = strstr(response,"New file content:");
+        if(!new_file_start)
+        {
+            fprintf(stderr, "Status -1, usupported format\n %s", response);
+            free(response);
+            return -1;
+        }
+
+        size_t explation_len = new_file_start - response;
+        char* explanation = malloc(explation_len + 1);
+        if(!explanation)
+        {
+            fprintf(stderr,"Status -1 Error allocating space\n");
+            free(response);
+            return -1;
+        }
+
+        strncpy(explanation,response,explation_len);
+        explanation[explation_len] = '\0';
+        char *new_file_content = new_file_start + strlen("New file content:");
+        while(*new_file_content == '\n' || *new_file_content == ' ')
+        {
+            new_file_content++;
+        }
+
+
+        printf("%s",explanation);
     return 0;
 }
