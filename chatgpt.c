@@ -59,7 +59,7 @@ char* chatgpt_query(const char* API_KEY, const char* prompt)
     headers = curl_slist_append(headers,auth_header);
     headers = curl_slist_append(headers,"Content-Type: application/json");
     
-    curl_easy_setopt(curl, CURLOPT_URL, "https://api.openai.com/v1/models/completions");
+    curl_easy_setopt(curl, CURLOPT_URL, "https://api.openai.com/v1/chat/completions");
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers); 
     curl_easy_setopt(curl,CURLOPT_POSTFIELDS,json_data); //send the json data
     curl_easy_setopt(curl,CURLOPT_WRITEFUNCTION, write_callback);
@@ -77,9 +77,25 @@ char* chatgpt_query(const char* API_KEY, const char* prompt)
         free(chunk.response);
         return NULL;
     }
-
-    printf("\n \n \n %s \n \n \n",chunk.response);
     cJSON *resp_json = cJSON_Parse(chunk.response);
+    cJSON* error_obj = cJSON_GetObjectItem(resp_json, "error");
+    if(error_obj)
+    {
+        cJSON* error_message = cJSON_GetObjectItem(error_obj, "message");
+        if(error_message && cJSON_IsString(error_message))
+        {
+            fprintf(stderr,"API returned with an error.\n");
+            fprintf(stderr,"error: %s\n",error_message->valuestring);
+        }
+        else
+        {
+            fprintf(stderr,"API returned an error without error message.\n");
+        }
+        free(chunk.response);
+        cJSON_Delete(resp_json);
+        return NULL;;
+    }
+
     if(!resp_json)
     {
         free(chunk.response);
@@ -87,7 +103,7 @@ char* chatgpt_query(const char* API_KEY, const char* prompt)
     }
 
     cJSON* choices = cJSON_GetObjectItem(resp_json, "choices");
-    if(!cJSON_IsArray(choices) || !cJSON_GetArraySize(choices) == 0);
+    if(!cJSON_IsArray(choices) || !cJSON_GetArraySize(choices) == 0)
     {
         cJSON_Delete(resp_json);
         free(chunk.response);
