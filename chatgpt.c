@@ -13,7 +13,7 @@ char* chatgpt_query(const char* API_KEY, const char* prompt)
 
     cJSON *msg = cJSON_CreateObject();
     cJSON_AddStringToObject(msg, "role", "user");
-    cJSON_AddStringToObject(root, "content", prompt);
+    cJSON_AddStringToObject(msg, "content", prompt);
 
     cJSON_AddItemToArray(messages, msg);
 

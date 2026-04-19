@@ -8,7 +8,7 @@ int main()
     {
         fprintf(stderr, "Your environement variable is not set.\n");
         fprintf(stderr,"Please set it before running this program\n");
-        return -1;
+       // return -1;
     }
     const char* prompt = "what is the capital of france?";
     char* reply = chatgpt_query(API_KEY, prompt);
